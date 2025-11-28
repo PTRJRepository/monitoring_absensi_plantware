@@ -91,6 +91,9 @@ function generateColumnDefs(year, month, daysInMonth) {
             field: `day_${day}`,
             width: 24,
             minWidth: 20,
+            sortable: false, // Disable sorting to save space in header
+            resizable: false, // Disable resizing for day columns
+            suppressMenu: true,
             suppressSizeToFit: false,
             cellStyle: (params) => getCellStyle(params, isSunday),
             cellRenderer: (params) => cellRenderer(params),
