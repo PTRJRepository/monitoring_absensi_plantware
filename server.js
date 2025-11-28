@@ -345,48 +345,28 @@ app.get('/api/attendance-by-loc', async (req, res) => {
         }
 
         let query;
-        if (includeEmpName === 'true') {
-            // Query that includes employee names
-            query = `
-                SELECT e.[EmpCode] AS EmpCode,
-                       e.[EmpName] AS EmpName,
-                       g.[GangCode] AS GangCode,
-                       a.[AttnDate] AS AttnDate,
-                       a.[WorkHours] AS WorkHours,
-                       a.[OTHours] AS OTHours,
-                       a.[IsOnLeave] AS IsOnLeave,
-                       a.[LeaveLength] AS LeaveLength,
-                       a.[TodayIsRestDay] AS TodayIsRestDay,
-                       a.[TodayIsHoliday] AS TodayIsHoliday
-                FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
-                JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
-                JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
-                WHERE e.[LocCode] = @locCode
-                  AND a.[PhysMonth] = @month
-                  AND a.[PhysYear] = @year
-                ORDER BY g.[GangCode], e.[EmpCode], a.[AttnDate]
-            `;
-        } else {
-            // Original query without employee names
-            query = `
-                SELECT e.[EmpCode] AS EmpCode,
-                       g.[GangCode] AS GangCode,
-                       a.[AttnDate] AS AttnDate,
-                       a.[WorkHours] AS WorkHours,
-                       a.[OTHours] AS OTHours,
-                       a.[IsOnLeave] AS IsOnLeave,
-                       a.[LeaveLength] AS LeaveLength,
-                       a.[TodayIsRestDay] AS TodayIsRestDay,
-                       a.[TodayIsHoliday] AS TodayIsHoliday
-                FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
-                JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
-                JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
-                WHERE e.[LocCode] = @locCode
-                  AND a.[PhysMonth] = @month
-                  AND a.[PhysYear] = @year
-                ORDER BY g.[GangCode], e.[EmpCode], a.[AttnDate]
-            `;
-        }
+        // Always include Employee Name
+        query = `
+            SELECT e.[EmpCode] AS EmpCode,
+                    e.[EmpName] AS EmpName,
+                    g.[GangCode] AS GangCode,
+                    a.[AttnDate] AS AttnDate,
+                    a.[WorkHours] AS WorkHours,
+                    a.[OTHours] AS OTHours,
+                    a.[IsOnLeave] AS IsOnLeave,
+                    a.[LeaveLength] AS LeaveLength,
+                    a.[TodayIsRestDay] AS TodayIsRestDay,
+                    a.[TodayIsHoliday] AS TodayIsHoliday
+            FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
+            JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
+            JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
+            WHERE e.[LocCode] = @locCode
+                AND a.[PhysMonth] = @month
+                AND a.[PhysYear] = @year
+            ORDER BY g.[GangCode], e.[EmpName], a.[AttnDate]
+        `;
+
+        /* Legacy conditional block removed */
 
         const result = await pool.request()
             .input('locCode', sql.VarChar, locCode)
@@ -400,7 +380,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
             if (!byEmp[emp]) {
                 byEmp[emp] = {
                     gangCode: record.GangCode,
-                    empName: record.EmpName, // Will be undefined if not included in query
+                    empName: record.EmpName || record.EmpCode, // Use Name, fallback to Code
                     records: []
                 };
             }
