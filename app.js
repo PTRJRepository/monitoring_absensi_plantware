@@ -60,10 +60,10 @@ function setupEventListeners() {
 function generateColumnDefs(year, month, daysInMonth) {
     const columnDefs = [
         {
-            headerName: 'Employee',
+            headerName: 'Name',
             field: 'empName',
             pinned: 'left',
-            width: 150,
+            width: 120,
             cellStyle: { fontWeight: '600', paddingLeft: '5px' }
         },
         {
@@ -145,7 +145,8 @@ async function loadAttendanceByLoc() {
             let totalPresenceCount = 0;
 
             const cleanRow = {
-                empName: (row.empName || row.empCode || 'Unknown').trim(),  // Use empName if available, fallback to empCode
+                gangCode: row.gangCode || 'INF',
+                empName: (row.empName || row.empCode || '').trim(),
                 month: row.month,
                 year: row.year
             };
