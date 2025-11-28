@@ -53,10 +53,7 @@ function setupEventListeners() {
         });
     }
 
-    const fitColumnsBtn = document.getElementById('fitColumnsBtn');
-    if (fitColumnsBtn) {
-        fitColumnsBtn.addEventListener('click', () => autoSizeAll(false));
-    }
+    // Removed auto size button functionality
 }
 
 // Generate column definitions for the grid
@@ -293,12 +290,6 @@ function initializeGrid(columnDefs, rowData) {
 
     const gridDiv = document.getElementById('myGrid');
     new agGrid.Grid(gridDiv, gridOptions);
-}
-
-function autoSizeAll(skipHeader) {
-    if (gridApi) {
-        gridApi.sizeColumnsToFit();
-    }
 }
 
 // Show/hide loading state
