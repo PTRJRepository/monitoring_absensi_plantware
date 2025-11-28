@@ -1,10 +1,20 @@
 .attendance-status {
-    width: 20px;
-    height: 20px;
+    width: 12px; /* Smaller circle */
+    height: 12px;
     border-radius: 50%;
-    display: inline-block; /* Changed from flex for simpler rendering inside cell */
-    vertical-align: middle; /* Align with any potential text */
-    margin: auto; /* Center the circle within the cell */
+    display: inline-block; 
+    vertical-align: middle; 
+    margin: auto; 
+}
+
+/* Compact Header Style */
+.compact-header .ag-header-cell-label {
+    justify-content: center;
+    padding: 0;
+}
+
+.compact-header .ag-header-cell-text {
+    font-size: 0.85em; /* Smaller font for day numbers */
 }
 
 /* Empty State Styles */
@@ -56,13 +66,13 @@ body {
     justify-content: center;
     align-items: flex-start; /* Align to top */
     min-height: 100vh;
-    padding: 20px;
+    padding: 0; /* Changed from 20px */
     box-sizing: border-box;
 }
 
 .container {
     background-color: #2d3748; /* Darker container */
-    padding: 30px;
+    padding: 0; /* Changed from 30px */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     width: 100%;
@@ -201,7 +211,7 @@ body {
     --ag-header-foreground-color: #a0aec0;
     --ag-odd-row-background-color: #2d3748;
     --ag-row-border-color: #4a5568;
-    --ag-font-size: 14px;
+    --ag-font-size: 12px; /* Reduced from 14px */
     --ag-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -213,4 +223,8 @@ body {
 
 .cell-sunday .ag-header-cell-label {
     color: #fca5a5; /* Light red for Sunday headers */
+}
+
+.compact-header .ag-header-cell-text {
+    font-size: 0.8em; /* Reduced from 0.85em for day numbers */
 }

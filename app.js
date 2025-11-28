@@ -50,22 +50,22 @@ function generateColumnDefs(year, month, daysInMonth) {
             headerName: 'Gang',
             field: 'gangCode',
             pinned: 'left',
-            width: 90,
-            cellStyle: { fontWeight: '600' }
+            width: 55,
+            cellStyle: { fontWeight: '600', paddingLeft: '5px' }
         },
         {
-            headerName: 'Employee',
+            headerName: 'Emp',
             field: 'empCode',
             pinned: 'left',
-            width: 110,
-            cellStyle: { fontWeight: '600' }
+            width: 80,
+            cellStyle: { fontWeight: '600', paddingLeft: '5px' }
         },
         {
-            headerName: 'Jumlah',
+            headerName: 'Jml',
             field: 'totalPresence',
             pinned: 'left',
-            width: 80,
-            cellStyle: { fontWeight: 'bold', color: '#63b3ed', textAlign: 'center' }
+            width: 60,
+            cellStyle: { fontWeight: 'bold', color: '#63b3ed', textAlign: 'center', padding: '0' }
         }
     ];
 
@@ -77,14 +77,15 @@ function generateColumnDefs(year, month, daysInMonth) {
         const isSunday = dayOfWeek === 0;
 
         columnDefs.push({
-            headerName: `${day}
-${dayName}`,
+            headerName: `${day}`,
+            headerTooltip: `${dayName}, ${day} ${getMonthName(month)}`,
             field: `day_${day}`,
-            width: 60,
-            suppressSizeToFit: true,
+            width: 28,
+            minWidth: 25,
+            suppressSizeToFit: false,
             cellStyle: (params) => getCellStyle(params, isSunday),
             cellRenderer: (params) => cellRenderer(params),
-            headerClass: isSunday ? 'cell-sunday' : ''
+            headerClass: isSunday ? 'cell-sunday' : '' // Removed 'compact-header'
         });
     }
 
@@ -258,8 +259,10 @@ function initializeGrid(columnDefs, rowData) {
         onGridReady: (params) => {
             gridApi = params.api;
             gridColumnApi = params.columnApi;
+            params.api.sizeColumnsToFit();
         },
         onFirstDataRendered: (params) => {
+            params.api.sizeColumnsToFit();
         }
     };
 
@@ -268,12 +271,9 @@ function initializeGrid(columnDefs, rowData) {
 }
 
 function autoSizeAll(skipHeader) {
-    if (!gridColumnApi) return;
-    const allColumnIds = [];
-    gridColumnApi.getAllColumns().forEach((column) => {
-        allColumnIds.push(column.getId());
-    });
-    gridColumnApi.autoSizeColumns(allColumnIds, skipHeader);
+    if (gridApi) {
+        gridApi.sizeColumnsToFit();
+    }
 }
 
 // Show/hide loading state
