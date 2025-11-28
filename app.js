@@ -26,6 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 100);
     });
+
+    // Also auto-size columns periodically to handle any layout changes
+    setInterval(() => {
+        if (gridApi) {
+            gridApi.sizeColumnsToFit();
+        }
+    }, 5000); // Every 5 seconds
 });
 
 // Setup event listeners
@@ -86,13 +93,14 @@ function generateColumnDefs(year, month, daysInMonth) {
         const isSunday = dayOfWeek === 0;
 
         columnDefs.push({
-            headerName: `${day}`,
+            headerName: `${day}\n${dayName}`,
             headerTooltip: `${dayName}, ${day} ${getMonthName(month)}`,
             field: `day_${day}`,
-            width: 24,
-            minWidth: 20,
+            width: 32, // Increased width to accommodate day number and day name
+            minWidth: 28,
+            maxWidth: 60,
             sortable: false, // Disable sorting to save space in header
-            resizable: false, // Disable resizing for day columns
+            resizable: true, // Enable resizing so users can adjust if needed
             suppressMenu: true,
             suppressSizeToFit: false,
             cellStyle: (params) => getCellStyle(params, isSunday),
@@ -266,7 +274,7 @@ function initializeGrid(columnDefs, rowData) {
         enableCellTextSelection: true,
         suppressRowClickSelection: true,
         rowHeight: 40, // Slightly tighter rows for monitoring
-        headerHeight: 60,
+        headerHeight: 70, // Increased height to accommodate two-line headers
         suppressHorizontalScroll: false,
         onGridReady: (params) => {
             gridApi = params.api;

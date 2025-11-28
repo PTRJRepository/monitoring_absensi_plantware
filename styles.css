@@ -26,8 +26,12 @@
 }
 
 .compact-header .ag-header-cell-text {
-    font-size: 0.85em;
-    /* Smaller font for day numbers */
+    font-size: 0.75em;
+    /* Smaller font for day numbers and day names */
+    line-height: 1.2;
+    /* Better line height for multi-line headers */
+    white-space: pre-line;
+    /* Allow line breaks in header text */
 }
 
 /* Empty State Styles */
@@ -269,6 +273,10 @@ body {
 }
 
 .compact-header .ag-header-cell-text {
-    font-size: 3;
-    /* Reduced from 0.85em for day numbers */
+    font-size: 0.75em;
+    /* Smaller font for day numbers and day names */
+    line-height: 1.2;
+    /* Better line height for multi-line headers */
+    white-space: pre-line;
+    /* Allow line breaks in header text */
 }
