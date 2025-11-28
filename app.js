@@ -285,7 +285,7 @@ function initializeGrid(columnDefs, rowData) {
         enableCellTextSelection: true,
         suppressRowClickSelection: true,
         rowHeight: 40, // Slightly tighter rows for monitoring
-        headerHeight: 70, // Increased height to accommodate two-line headers
+        headerHeight: 50, // Optimized height for two-line headers
         suppressHorizontalScroll: false,
         onGridReady: (params) => {
             gridApi = params.api;
