@@ -1,0 +1,73 @@
+{
+  "database": {
+    "driver": "ODBC Driver 17 for SQL Server",
+    "server": "10.0.0.0",
+    "port": 1888,
+    "username": "sa",
+    "password": "supp0rt@",
+    "database_name": "db_ptrj",
+    "trusted_connection": false,
+    "encrypt": false,
+    "connection_timeout": 30,
+    "trust_server_certificate": true
+  },
+  "database_profiles": {
+    "local": {
+      "driver": "ODBC Driver 17 for SQL Server",
+      "server": "localhost",
+      "port": 1433,
+      "username": "sa",
+      "password": "windows0819",
+      "database_name": "db_ptrj",
+      "trusted_connection": false,
+      "encrypt": false
+    },
+    "local-server-2": {
+      "driver": "ODBC Driver 17 for SQL Server",
+      "server": "localhost",
+      "port": 1433,
+      "username": "sa",
+      "password": "",
+      "database_name": "db_ptrj",
+      "trusted_connection": false,
+      "encrypt": false
+    },
+    "remote": {
+      "driver": "ODBC Driver 17 for SQL Server",
+      "server": "10.0.0.0",
+      "port": 1888,
+      "username": "sa",
+      "password": "supp0rt@",
+      "database_name": "db_ptrj",
+      "trusted_connection": false,
+      "encrypt": false,
+      "connection_timeout": 30,
+      "trust_server_certificate": true
+    },
+    "plantware_remote": {
+      "driver": "ODBC Driver 17 for SQL Server",
+      "server": "10.0.0.0",
+      "port": 1888,
+      "username": "sa",
+      "password": "supp0rt@",
+      "database_name": "db_ptrj",
+      "trusted_connection": false,
+      "encrypt": false,
+      "connection_timeout": 30,
+      "trust_server_certificate": true
+    }
+  },
+  "constants": {
+    "Caruman_Astek": {
+      "Pekerja": 77532,
+      "Majikan": 175998
+    },
+    "potongan_bpjs": {
+      "gaji_pokok_min": 3876600,
+      "iuran_spsi": 4000
+    },
+    "upah_minimum": {
+      "dasar": 3876600
+    }
+  }
+}

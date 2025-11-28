@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Plantware Employee Attendance Grid - Modern attendance tracking with AG Grid">
+    <title>Plantware Attendance Grid</title>
+    
+    <!-- AG Grid CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/styles/ag-grid.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/styles/ag-theme-alpine-dark.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header Section -->
+        <header class="header">
+            <h1>📊 Plantware Attendance Grid</h1>
+            <p>Employee attendance tracking with dynamic date matrix</p>
+        </header>
+
+        <!-- Controls Panel -->
+        <div class="controls">
+            <div class="controls-grid">
+
+                <div class="form-group">
+                    <label for="locCode">Loc Code</label>
+                    <input 
+                        type="text" 
+                        id="locCode" 
+                        class="form-control" 
+                        placeholder="Enter loc code (e.g., P1A)"
+                        value=""
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="month">Month</label>
+                    <select id="month" class="form-control">
+                        <option value="1">January</option>
+                        <option value="2">February</option>
+                        <option value="3">March</option>
+                        <option value="4">April</option>
+                        <option value="5">May</option>
+                        <option value="6">June</option>
+                        <option value="7">July</option>
+                        <option value="8">August</option>
+                        <option value="9">September</option>
+                        <option value="10">October</option>
+                        <option value="11" selected>November</option>
+                        <option value="12">December</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="year">Year</label>
+                    <input 
+                        type="number" 
+                        id="year" 
+                        class="form-control" 
+                        placeholder="Year"
+                        value="2025"
+                        min="2000"
+                        max="2100"
+                    >
+                </div>
+
+
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <button id="loadByLocBtn" class="btn">
+                        Load By Loc Code
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Container -->
+        <div id="gridContainer" class="grid-container">
+            <button id="fitColumnsBtn" class="btn small-btn" style="position: absolute; top: 10px; right: 25px; z-index: 100;">
+                Auto Size
+            </button>
+            <div id="emptyState" class="empty-state">
+                <div class="empty-icon">👈</div>
+                <div class="empty-text">Please enter a Loc Code and Year/Month to begin monitoring</div>
+            </div>
+            <div class="loading" id="loadingState" style="display: none;">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading attendance data...</div>
+            </div>
+            <div id="myGrid" class="ag-theme-alpine-dark" style="height: 600px; width: 100%; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- AG Grid JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/dist/ag-grid-community.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="app.js?v=2"></script>
+</body>
+</html>
