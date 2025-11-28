@@ -319,12 +319,12 @@ app.get('/api/attendance-by-loc', async (req, res) => {
 
         if (!pool) {
             const employees = [
-                { emp: 'A0749', gang: 'G1', name: 'Employee A' },
-                { emp: 'B1001', gang: 'G2', name: 'Employee B' },
-                { emp: 'C2050', gang: 'G2', name: 'Employee C' }
+                { emp: 'A0749', name: 'Employee A' },
+                { emp: 'B1001', name: 'Employee B' },
+                { emp: 'C2050', name: 'Employee C' }
             ];
-            const rows = employees.map(({ emp, gang, name }) => {
-                const row = { empCode: emp, gangCode: gang, empName: name, month, year };
+            const rows = employees.map(({ emp, name }) => {
+                const row = { empCode: emp, empName: name, month, year };
                 for (let day = 1; day <= daysInMonth; day++) {
                     const date = new Date(parseInt(year), parseInt(month) - 1, day);
                     const isSunday = date.getDay() === 0;
@@ -344,29 +344,23 @@ app.get('/api/attendance-by-loc', async (req, res) => {
             return res.json({ success: true, data: rows, daysInMonth });
         }
 
-        let query;
-        // Always include Employee Name
-        query = `
+        const query = `
             SELECT e.[EmpCode] AS EmpCode,
-                    e.[EmpName] AS EmpName,
-                    g.[GangCode] AS GangCode,
-                    a.[AttnDate] AS AttnDate,
-                    a.[WorkHours] AS WorkHours,
-                    a.[OTHours] AS OTHours,
-                    a.[IsOnLeave] AS IsOnLeave,
-                    a.[LeaveLength] AS LeaveLength,
-                    a.[TodayIsRestDay] AS TodayIsRestDay,
-                    a.[TodayIsHoliday] AS TodayIsHoliday
+                   e.[EmpName] AS EmpName,
+                   a.[AttnDate] AS AttnDate,
+                   a.[WorkHours] AS WorkHours,
+                   a.[OTHours] AS OTHours,
+                   a.[IsOnLeave] AS IsOnLeave,
+                   a.[LeaveLength] AS LeaveLength,
+                   a.[TodayIsRestDay] AS TodayIsRestDay,
+                   a.[TodayIsHoliday] AS TodayIsHoliday
             FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
             JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
-            JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
             WHERE e.[LocCode] = @locCode
-                AND a.[PhysMonth] = @month
-                AND a.[PhysYear] = @year
-            ORDER BY g.[GangCode], e.[EmpName], a.[AttnDate]
+              AND a.[PhysMonth] = @month
+              AND a.[PhysYear] = @year
+            ORDER BY e.[EmpName], a.[AttnDate]
         `;
-
-        /* Legacy conditional block removed */
 
         const result = await pool.request()
             .input('locCode', sql.VarChar, locCode)
@@ -379,7 +373,6 @@ app.get('/api/attendance-by-loc', async (req, res) => {
             const emp = record.EmpCode;
             if (!byEmp[emp]) {
                 byEmp[emp] = {
-                    gangCode: record.GangCode,
                     empName: record.EmpName || record.EmpCode, // Use Name, fallback to Code
                     records: []
                 };
@@ -405,8 +398,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
 
             const row = {
                 empCode: emp,
-                gangCode: byEmp[emp].gangCode,
-                empName: byEmp[emp].empName,  // Will be undefined if not included in query
+                empName: byEmp[emp].empName,
                 month,
                 year
             };
