@@ -85,7 +85,7 @@ function generateColumnDefs(year, month, daysInMonth) {
             suppressSizeToFit: false,
             cellStyle: (params) => getCellStyle(params, isSunday),
             cellRenderer: (params) => cellRenderer(params),
-            headerClass: isSunday ? 'cell-sunday' : '' // Removed 'compact-header'
+            headerClass: isSunday ? 'cell-sunday compact-header' : 'compact-header'
         });
     }
 

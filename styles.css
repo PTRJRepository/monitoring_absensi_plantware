@@ -8,6 +8,11 @@
 }
 
 /* Compact Header Style */
+.compact-header {
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+}
+
 .compact-header .ag-header-cell-label {
     justify-content: center;
     padding: 0;
@@ -211,7 +216,7 @@ body {
     --ag-header-foreground-color: #a0aec0;
     --ag-odd-row-background-color: #2d3748;
     --ag-row-border-color: #4a5568;
-    --ag-font-size: 12px; /* Reduced from 14px */
+    --ag-font-size: 11px; /* Reduced from 12px */
     --ag-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
