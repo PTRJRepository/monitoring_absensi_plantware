@@ -60,6 +60,13 @@ function setupEventListeners() {
 function generateColumnDefs(year, month, daysInMonth) {
     const columnDefs = [
         {
+            headerName: 'Gang',
+            field: 'gangCode',
+            pinned: 'left',
+            width: 55,
+            cellStyle: { fontWeight: '600', paddingLeft: '5px' }
+        },
+        {
             headerName: 'Name',
             field: 'empName',
             pinned: 'left',

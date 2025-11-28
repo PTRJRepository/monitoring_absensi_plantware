@@ -347,6 +347,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
         const query = `
             SELECT e.[EmpCode] AS EmpCode,
                    e.[EmpName] AS EmpName,
+                   g.[GangCode] AS GangCode,
                    a.[AttnDate] AS AttnDate,
                    a.[WorkHours] AS WorkHours,
                    a.[OTHours] AS OTHours,
@@ -356,10 +357,11 @@ app.get('/api/attendance-by-loc', async (req, res) => {
                    a.[TodayIsHoliday] AS TodayIsHoliday
             FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
             JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
+            JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
             WHERE e.[LocCode] = @locCode
               AND a.[PhysMonth] = @month
               AND a.[PhysYear] = @year
-            ORDER BY e.[EmpName], a.[AttnDate]
+            ORDER BY g.[GangCode], e.[EmpName], a.[AttnDate]
         `;
 
         const result = await pool.request()
@@ -373,6 +375,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
             const emp = record.EmpCode;
             if (!byEmp[emp]) {
                 byEmp[emp] = {
+                    gangCode: record.GangCode,
                     empName: record.EmpName || record.EmpCode, // Use Name, fallback to Code
                     records: []
                 };
@@ -398,6 +401,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
 
             const row = {
                 empCode: emp,
+                gangCode: byEmp[emp].gangCode,
                 empName: byEmp[emp].empName,
                 month,
                 year
