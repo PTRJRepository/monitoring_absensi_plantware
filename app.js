@@ -190,12 +190,28 @@ async function loadAttendanceByLoc() {
             return cleanRow;
         });
 
+        // Inject Gang Headers
+        const groupedData = [];
+        let lastGangCode = null;
+
+        cleanData.forEach(row => {
+            if (row.gangCode !== lastGangCode) {
+                // Add a header row
+                groupedData.push({
+                    isGangHeader: true,
+                    gangCode: row.gangCode
+                });
+                lastGangCode = row.gangCode;
+            }
+            groupedData.push(row);
+        });
+
         if (gridApi) {
             gridApi.setColumnDefs(columnDefs);
-            gridApi.setRowData(cleanData);
+            gridApi.setRowData(groupedData);
             console.log('✅ Grid updated with existing API');
         } else {
-            initializeGrid(columnDefs, cleanData);
+            initializeGrid(columnDefs, groupedData);
             console.log('✅ Grid initialized with new data');
         }
 
@@ -278,6 +294,12 @@ function initializeGrid(columnDefs, rowData) {
         },
         onFirstDataRendered: (params) => {
             params.api.sizeColumnsToFit();
+        },
+        // Full Width Row Configuration for Gang Headers
+        isFullWidthRow: (params) => params.rowNode.data && params.rowNode.data.isGangHeader,
+        fullWidthCellRenderer: (params) => {
+            const gang = params.data.gangCode || 'Unknown';
+            return `<div class="gang-header-cell"><span>GANG: ${gang}</span></div>`;
         }
     };
 

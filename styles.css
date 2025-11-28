@@ -1,11 +1,10 @@
 .attendance-status {
-    width: 12px;
-    /* Smaller circle */
+    width: 12px; /* Smaller circle */
     height: 12px;
     border-radius: 50%;
-    display: inline-block;
-    vertical-align: middle;
-    margin: auto;
+    display: inline-block; 
+    vertical-align: middle; 
+    margin: auto; 
 }
 
 /* Compact Header Style */
@@ -26,12 +25,22 @@
 }
 
 .compact-header .ag-header-cell-text {
-    font-size: 0.75em;
-    /* Smaller font for day numbers and day names */
-    line-height: 1.2;
-    /* Better line height for multi-line headers */
-    white-space: pre-line;
-    /* Allow line breaks in header text */
+    font-size: 0.8em; /* Reduced from 0.85em for day numbers */
+}
+
+/* Gang Header Style */
+.gang-header-cell {
+    background-color: #2c5282; /* Dark Blue background for gang header */
+    color: #fff;
+    font-weight: bold;
+    padding-left: 15px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #4a5568;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 1.1em;
 }
 
 /* Empty State Styles */
@@ -57,29 +66,15 @@
 }
 
 @keyframes bounce {
-
-    0%,
-    20%,
-    50%,
-    80%,
-    100% {
-        transform: translateY(0);
-    }
-
-    40% {
-        transform: translateY(-10px);
-    }
-
-    60% {
-        transform: translateY(-5px);
-    }
+    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+    40% {transform: translateY(-10px);}
+    60% {transform: translateY(-5px);}
 }
 
 .small-btn {
     padding: 6px 12px;
     font-size: 0.8em;
-    background-color: #5a67d8;
-    /* A bit darker blue for the small button */
+    background-color: #5a67d8; /* A bit darker blue for the small button */
 }
 
 .small-btn:hover {
@@ -91,25 +86,19 @@
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    background-color: #1a202c;
-    /* Dark background */
-    color: #cbd5e0;
-    /* Light text */
+    background-color: #1a202c; /* Dark background */
+    color: #cbd5e0; /* Light text */
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    /* Align to top */
+    align-items: flex-start; /* Align to top */
     min-height: 100vh;
-    padding: 0;
-    /* Changed from 20px */
+    padding: 0; /* Changed from 20px */
     box-sizing: border-box;
 }
 
 .container {
-    background-color: #2d3748;
-    /* Darker container */
-    padding: 0;
-    /* Changed from 30px */
+    background-color: #2d3748; /* Darker container */
+    padding: 0; /* Changed from 30px */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     width: 100%;
@@ -126,8 +115,7 @@ body {
 .header h1 {
     font-size: 2.5em;
     margin-bottom: 10px;
-    color: #63b3ed;
-    /* Blue accent */
+    color: #63b3ed; /* Blue accent */
 }
 
 .header p {
@@ -203,8 +191,7 @@ body {
     width: 100%;
     background-color: #2d3748;
     border-radius: 8px;
-    overflow: hidden;
-    /* Ensures rounded corners are respected */
+    overflow: hidden; /* Ensures rounded corners are respected */
 }
 
 .loading {
@@ -213,8 +200,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(45, 55, 72, 0.9);
-    /* Semi-transparent overlay */
+    background-color: rgba(45, 55, 72, 0.9); /* Semi-transparent overlay */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -235,13 +221,8 @@ body {
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .loading-text {
@@ -256,8 +237,7 @@ body {
     --ag-header-foreground-color: #a0aec0;
     --ag-odd-row-background-color: #2d3748;
     --ag-row-border-color: #4a5568;
-    --ag-font-size: 10px;
-    /* Reduced from 12px */
+    --ag-font-size: 10px; /* Reduced from 12px */
     --ag-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -268,15 +248,5 @@ body {
 }
 
 .cell-sunday .ag-header-cell-label {
-    color: #fca5a5;
-    /* Light red for Sunday headers */
-}
-
-.compact-header .ag-header-cell-text {
-    font-size: 0.75em;
-    /* Smaller font for day numbers and day names */
-    line-height: 1.2;
-    /* Better line height for multi-line headers */
-    white-space: pre-line;
-    /* Allow line breaks in header text */
+    color: #fca5a5; /* Light red for Sunday headers */
 }
