@@ -60,17 +60,10 @@ function setupEventListeners() {
 function generateColumnDefs(year, month, daysInMonth) {
     const columnDefs = [
         {
-            headerName: 'Gang',
-            field: 'gangCode',
+            headerName: 'Employee',
+            field: 'empName',
             pinned: 'left',
-            width: 55,
-            cellStyle: { fontWeight: '600', paddingLeft: '5px' }
-        },
-        {
-            headerName: 'Emp',
-            field: 'empCode',
-            pinned: 'left',
-            width: 80,
+            width: 150,
             cellStyle: { fontWeight: '600', paddingLeft: '5px' }
         },
         {
@@ -129,7 +122,7 @@ async function loadAttendanceByLoc() {
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/attendance-by-loc?locCode=${encodeURIComponent(locCode)}&month=${month}&year=${year}`
+            `${API_BASE_URL}/attendance-by-loc?locCode=${encodeURIComponent(locCode)}&month=${month}&year=${year}&includeEmpName=true`
         );
 
         if (!response.ok) {
@@ -152,8 +145,7 @@ async function loadAttendanceByLoc() {
             let totalPresenceCount = 0;
 
             const cleanRow = {
-                gangCode: row.gangCode || 'INF',
-                empCode: (row.empCode || '').trim(),
+                empName: (row.empName || row.empCode || 'Unknown').trim(),  // Use empName if available, fallback to empCode
                 month: row.month,
                 year: row.year
             };
@@ -166,7 +158,7 @@ async function loadAttendanceByLoc() {
                 if (dayData && typeof dayData === 'object') {
                     // Check if meaningful data exists for the count
                      hasData = (dayData.workHours > 0 || dayData.otHours > 0 || dayData.isOnLeave || dayData.isHoliday || dayData.isRestDay);
-                    
+
                     cleanRow[`day_${day}`] = {
                         workHours: dayData.workHours || 0,
                         otHours: dayData.otHours || 0,

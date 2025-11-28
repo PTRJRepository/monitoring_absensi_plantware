@@ -307,7 +307,7 @@ app.get('/health', (req, res) => {
 
 app.get('/api/attendance-by-loc', async (req, res) => {
     try {
-        const { locCode, month, year } = req.query;
+        const { locCode, month, year, includeEmpName } = req.query;
 
         if (!locCode || !month || !year) {
             return res.status(400).json({
@@ -319,12 +319,12 @@ app.get('/api/attendance-by-loc', async (req, res) => {
 
         if (!pool) {
             const employees = [
-                { emp: 'A0749', gang: 'G1' },
-                { emp: 'B1001', gang: 'G2' },
-                { emp: 'C2050', gang: 'G2' }
+                { emp: 'A0749', gang: 'G1', name: 'Employee A' },
+                { emp: 'B1001', gang: 'G2', name: 'Employee B' },
+                { emp: 'C2050', gang: 'G2', name: 'Employee C' }
             ];
-            const rows = employees.map(({ emp, gang }) => {
-                const row = { empCode: emp, gangCode: gang, month, year };
+            const rows = employees.map(({ emp, gang, name }) => {
+                const row = { empCode: emp, gangCode: gang, empName: name, month, year };
                 for (let day = 1; day <= daysInMonth; day++) {
                     const date = new Date(parseInt(year), parseInt(month) - 1, day);
                     const isSunday = date.getDay() === 0;
@@ -344,24 +344,49 @@ app.get('/api/attendance-by-loc', async (req, res) => {
             return res.json({ success: true, data: rows, daysInMonth });
         }
 
-        const query = `
-            SELECT e.[EmpCode] AS EmpCode,
-                   g.[GangCode] AS GangCode,
-                   a.[AttnDate] AS AttnDate,
-                   a.[WorkHours] AS WorkHours,
-                   a.[OTHours] AS OTHours,
-                   a.[IsOnLeave] AS IsOnLeave,
-                   a.[LeaveLength] AS LeaveLength,
-                   a.[TodayIsRestDay] AS TodayIsRestDay,
-                   a.[TodayIsHoliday] AS TodayIsHoliday
-            FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
-            JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
-            JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
-            WHERE e.[LocCode] = @locCode
-              AND a.[PhysMonth] = @month
-              AND a.[PhysYear] = @year
-            ORDER BY g.[GangCode], e.[EmpCode], a.[AttnDate]
-        `;
+        let query;
+        if (includeEmpName === 'true') {
+            // Query that includes employee names
+            query = `
+                SELECT e.[EmpCode] AS EmpCode,
+                       e.[EmpName] AS EmpName,
+                       g.[GangCode] AS GangCode,
+                       a.[AttnDate] AS AttnDate,
+                       a.[WorkHours] AS WorkHours,
+                       a.[OTHours] AS OTHours,
+                       a.[IsOnLeave] AS IsOnLeave,
+                       a.[LeaveLength] AS LeaveLength,
+                       a.[TodayIsRestDay] AS TodayIsRestDay,
+                       a.[TodayIsHoliday] AS TodayIsHoliday
+                FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
+                JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
+                JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
+                WHERE e.[LocCode] = @locCode
+                  AND a.[PhysMonth] = @month
+                  AND a.[PhysYear] = @year
+                ORDER BY g.[GangCode], e.[EmpCode], a.[AttnDate]
+            `;
+        } else {
+            // Original query without employee names
+            query = `
+                SELECT e.[EmpCode] AS EmpCode,
+                       g.[GangCode] AS GangCode,
+                       a.[AttnDate] AS AttnDate,
+                       a.[WorkHours] AS WorkHours,
+                       a.[OTHours] AS OTHours,
+                       a.[IsOnLeave] AS IsOnLeave,
+                       a.[LeaveLength] AS LeaveLength,
+                       a.[TodayIsRestDay] AS TodayIsRestDay,
+                       a.[TodayIsHoliday] AS TodayIsHoliday
+                FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
+                JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
+                JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
+                WHERE e.[LocCode] = @locCode
+                  AND a.[PhysMonth] = @month
+                  AND a.[PhysYear] = @year
+                ORDER BY g.[GangCode], e.[EmpCode], a.[AttnDate]
+            `;
+        }
 
         const result = await pool.request()
             .input('locCode', sql.VarChar, locCode)
@@ -372,7 +397,13 @@ app.get('/api/attendance-by-loc', async (req, res) => {
         const byEmp = {};
         result.recordset.forEach(record => {
             const emp = record.EmpCode;
-            if (!byEmp[emp]) byEmp[emp] = { gangCode: record.GangCode, records: [] };
+            if (!byEmp[emp]) {
+                byEmp[emp] = {
+                    gangCode: record.GangCode,
+                    empName: record.EmpName, // Will be undefined if not included in query
+                    records: []
+                };
+            }
             byEmp[emp].records.push(record);
         });
 
@@ -392,7 +423,13 @@ app.get('/api/attendance-by-loc', async (req, res) => {
                 };
             });
 
-            const row = { empCode: emp, gangCode: byEmp[emp].gangCode, month, year };
+            const row = {
+                empCode: emp,
+                gangCode: byEmp[emp].gangCode,
+                empName: byEmp[emp].empName,  // Will be undefined if not included in query
+                month,
+                year
+            };
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                 const dayData = dateMap[day];
