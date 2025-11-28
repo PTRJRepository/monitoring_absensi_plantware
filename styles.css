@@ -216,7 +216,7 @@ body {
     --ag-header-foreground-color: #a0aec0;
     --ag-odd-row-background-color: #2d3748;
     --ag-row-border-color: #4a5568;
-    --ag-font-size: 11px; /* Reduced from 12px */
+    --ag-font-size: 10px; /* Reduced from 12px */
     --ag-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 

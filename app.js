@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const now = new Date();
     document.getElementById('month').value = now.getMonth() + 1;
     document.getElementById('year').value = now.getFullYear();
+
+    // Auto-size columns on window resize
+    window.addEventListener('resize', () => {
+        setTimeout(() => {
+            if (gridApi) {
+                gridApi.sizeColumnsToFit();
+            }
+        }, 100);
+    });
 });
 
 // Setup event listeners
@@ -80,8 +89,8 @@ function generateColumnDefs(year, month, daysInMonth) {
             headerName: `${day}`,
             headerTooltip: `${dayName}, ${day} ${getMonthName(month)}`,
             field: `day_${day}`,
-            width: 28,
-            minWidth: 25,
+            width: 24,
+            minWidth: 20,
             suppressSizeToFit: false,
             cellStyle: (params) => getCellStyle(params, isSunday),
             cellRenderer: (params) => cellRenderer(params),
