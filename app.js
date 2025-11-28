@@ -220,17 +220,22 @@ async function loadAttendanceByLoc() {
 // Custom cell renderer
 function cellRenderer(params) {
     const data = params.value;
+    let title = "No Data";
+    let bgColor = "#ef4444"; // Red for no data
 
     // Check if any activity is present (work hours, OT, leave, holiday, rest day)
     const dataExists = data && (data.workHours > 0 || data.otHours > 0 || data.isOnLeave || data.isHoliday || data.isRestDay);
 
     if (dataExists) {
         // Blue circle for data exists
-        return `<div class="attendance-status" style="background-color: #3b82f6;" title="Data Exists"></div>`;
-    } else {
-        // Red circle for no data
-        return `<div class="attendance-status" style="background-color: #ef4444;" title="No Data"></div>`;
+        bgColor = "#3b82f6"; // Blue for data exists
+        title = `Work: ${data.workHours}h, OT: ${data.otHours}h`;
+        if (data.isOnLeave) title += `, On Leave`;
+        if (data.isHoliday) title += `, Holiday`;
+        if (data.isRestDay) title += `, Rest Day`;
     }
+
+    return `<div class="attendance-status" style="background-color: ${bgColor};" title="${title}"></div>`;
 }
 
 // Get cell style based on conditions
