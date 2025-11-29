@@ -90,14 +90,15 @@ app.get('/api/employees-by-loc', async (req, res) => {
 
         const query = `
             SELECT
-                e.EmpCode AS EmployeeCode,
+                emt.EmpCode AS EmployeeCode,
                 e.EmpName AS EmployeeName,
-                e.LocCode AS LocationCode,
+                emt.LocCode AS LocationCode,
                 g.GangCode AS GangCode
-            FROM HR_EMPLOYEE e
-            JOIN HR_GANGLN g ON e.EmpCode = g.GangMember
-            WHERE e.LocCode = @locCode
-            ORDER BY g.GangCode, e.EmpCode
+            FROM HR_EMPLOYMENT emt
+            LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
+            LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
+            WHERE emt.LocCode = @locCode
+            ORDER BY g.GangCode, emt.EmpCode
         `;
 
         const result = await pool.request()
@@ -171,15 +172,15 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
         // Query untuk mendapatkan semua employee di lokasi tersebut
         const empQuery = `
             SELECT DISTINCT
-                e.EmpCode,
+                emt.EmpCode,
                 e.EmpName,
                 g.GangCode,
                 g.GangName
-            FROM HR_EMPLOYEE e
-            JOIN HR_GANGLN g ON e.EmpCode = g.GangMember
-            WHERE e.LocCode = @locCode
-                ${includeInactive === 'true' ? '' : 'AND e.IsActive = 1'}
-            ORDER BY g.GangCode, e.EmpCode
+            FROM HR_EMPLOYMENT emt
+            LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
+            LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
+            WHERE emt.LocCode = @locCode
+            ORDER BY g.GangCode, emt.EmpCode
         `;
 
         const empResult = await pool.request()
@@ -202,12 +203,12 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 a.TodayIsRestDay,
                 a.TodayIsHoliday
             FROM PR_EMP_ATTN a
-            JOIN HR_EMPLOYEE e ON e.EmpCode = a.EmpCode
-            JOIN HR_GANGLN g ON g.GangMember = a.EmpCode
-            WHERE e.LocCode = @locCode
+            JOIN HR_EMPLOYMENT emt ON emt.EmpCode = a.EmpCode
+            LEFT JOIN HR_EMPLOYEE e ON e.EmpCode = a.EmpCode
+            LEFT JOIN HR_GANGLN g ON g.GangMember = a.EmpCode
+            WHERE emt.LocCode = @locCode
                 AND a.PhysMonth = @month
                 AND a.PhysYear = @year
-                ${includeInactive === 'true' ? '' : 'AND e.IsActive = 1'}
             ORDER BY g.GangCode, e.EmpCode, a.AttnDate
         `;
 
@@ -345,7 +346,7 @@ app.get('/api/attendance-by-loc', async (req, res) => {
         }
 
         const query = `
-            SELECT e.[EmpCode] AS EmpCode,
+            SELECT emt.[EmpCode] AS EmpCode,
                    e.[EmpName] AS EmpName,
                    g.[GangCode] AS GangCode,
                    a.[AttnDate] AS AttnDate,
@@ -355,12 +356,13 @@ app.get('/api/attendance-by-loc', async (req, res) => {
                    a.[LeaveLength] AS LeaveLength,
                    a.[TodayIsRestDay] AS TodayIsRestDay,
                    a.[TodayIsHoliday] AS TodayIsHoliday
-            FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a
-            JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = a.[EmpCode]
-            JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = a.[EmpCode]
-            WHERE e.[LocCode] = @locCode
-              AND a.[PhysMonth] = @month
-              AND a.[PhysYear] = @year
+            FROM [db_ptrj].[dbo].[HR_EMPLOYMENT] emt
+            LEFT JOIN [db_ptrj].[dbo].[PR_EMP_ATTN] a ON emt.[EmpCode] = a.[EmpCode] 
+                AND a.[PhysMonth] = @month 
+                AND a.[PhysYear] = @year
+            LEFT JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = emt.[EmpCode]
+            LEFT JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = emt.[EmpCode]
+            WHERE emt.[LocCode] = @locCode
             ORDER BY g.[GangCode], e.[EmpName], a.[AttnDate]
         `;
 
