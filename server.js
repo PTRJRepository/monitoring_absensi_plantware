@@ -81,9 +81,9 @@ app.get('/api/employees-by-loc', async (req, res) => {
         if (!pool) {
             // Fallback data untuk development
             const fallbackEmployees = [
-                { EmployeeCode: 'A0749', EmployeeName: 'Employee A', LocationCode: locCode, GangCode: 'G1', GangName: 'Gang 1', IsActive: 1 },
-                { EmployeeCode: 'B1001', EmployeeName: 'Employee B', LocationCode: locCode, GangCode: 'G2', GangName: 'Gang 2', IsActive: 1 },
-                { EmployeeCode: 'C2050', EmployeeName: 'Employee C', LocationCode: locCode, GangCode: 'G2', GangName: 'Gang 2', IsActive: 1 }
+                { EmployeeCode: 'A0749', EmployeeName: 'Employee A', LocationCode: locCode, GangCode: 'G1', GangName: 'Gang 1', Status: 1 },
+                { EmployeeCode: 'B1001', EmployeeName: 'Employee B', LocationCode: locCode, GangCode: 'G2', GangName: 'Gang 2', Status: 1 },
+                { EmployeeCode: 'C2050', EmployeeName: 'Employee C', LocationCode: locCode, GangCode: 'G2', GangName: 'Gang 2', Status: 1 }
             ];
             return res.json({ success: true, data: fallbackEmployees, count: fallbackEmployees.length });
         }

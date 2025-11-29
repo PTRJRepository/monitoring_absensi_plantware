@@ -53,19 +53,22 @@ function setupEventListeners() {
         });
     }
 
+    const searchNameInput = document.getElementById('searchName');
+    if (searchNameInput) {
+        searchNameInput.addEventListener('input', (e) => {
+            if (gridApi) {
+                gridApi.setQuickFilter(e.target.value);
+            }
+        });
+    }
+
     // Removed auto size button functionality
 }
 
 // Generate column definitions for the grid
 function generateColumnDefs(year, month, daysInMonth) {
     const columnDefs = [
-        {
-            headerName: 'Gang',
-            field: 'gangCode',
-            pinned: 'left',
-            width: 55,
-            cellStyle: { fontWeight: '600', paddingLeft: '5px' }
-        },
+        // Gang column removed as requested
         {
             headerName: 'Name',
             field: 'empName',
@@ -165,7 +168,7 @@ async function loadAttendanceByLoc() {
 
                 if (dayData && typeof dayData === 'object') {
                     // Check if meaningful data exists for the count
-                     hasData = (dayData.workHours > 0 || dayData.otHours > 0 || dayData.isOnLeave || dayData.isHoliday || dayData.isRestDay);
+                    hasData = (dayData.workHours > 0 || dayData.otHours > 0 || dayData.isOnLeave || dayData.isHoliday || dayData.isRestDay);
 
                     cleanRow[`day_${day}`] = {
                         workHours: dayData.workHours || 0,
@@ -263,7 +266,7 @@ function getCellStyle(params, isSunday) {
     if (!params.value) {
         return baseStyle;
     }
-    
+
     // We mainly rely on the cellRenderer for the circles, 
     // but we can keep background styling for Sundays to help visual grid
     if (isSunday) {

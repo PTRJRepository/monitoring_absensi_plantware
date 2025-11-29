@@ -1,27 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Monitoring Absensi Plantware - Pantau dan Verifikasi Data Absensi">
     <title>Monitoring Absensi Plantware</title>
-    
+
     <!-- AG Grid CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/styles/ag-grid.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/styles/ag-theme-alpine-dark.css">
-    
+
     <!-- Custom CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="container">
         <!-- Header Section -->
         <header class="header" style="display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <img src="assets/logo.webp" alt="Plantware Logo" style="max-width: 50px; margin-bottom: 15px; mix-blend-mode: multiply;">
+            <img src="assets/logo.webp" alt="Plantware Logo"
+                style="max-width: 50px; margin-bottom: 15px; mix-blend-mode: multiply;">
             <h1>Monitoring Absensi Plantware</h1>
             <p>Sistem pemantauan absensi karyawan dengan matriks tanggal dinamis.</p>
-            <p class="kerani-note" style="font-style: italic; color: #a0aec0; margin-top: 10px; border-top: 1px solid #4a5568; padding-top: 10px;">
-                Catatan untuk Kerani: Harap pantau dan periksa kesamaan data absensi yang dibuat (dari IFESS) dengan data yang tampil pada tabel ini. Jika ditemukan data yang berbeda atau tidak sesuai, mohon disesuaikan di sistem Plantware melalui Taskreg.
+            <p class="kerani-note"
+                style="font-style: italic; color: #a0aec0; margin-top: 10px; border-top: 1px solid #4a5568; padding-top: 10px;">
+                Catatan untuk Kerani: Harap pantau dan periksa kesamaan data absensi yang dibuat (dari IFESS) dengan
+                data yang tampil pada tabel ini. Jika ditemukan data yang berbeda atau tidak sesuai, mohon disesuaikan
+                di sistem Plantware melalui Taskreg.
             </p>
         </header>
 
@@ -31,13 +37,8 @@
 
                 <div class="form-group">
                     <label for="locCode">Loc Code</label>
-                    <input 
-                        type="text" 
-                        id="locCode" 
-                        class="form-control" 
-                        placeholder="Enter loc code (e.g., P1A)"
-                        value=""
-                    >
+                    <input type="text" id="locCode" class="form-control" placeholder="Enter loc code (e.g., P1A)"
+                        value="">
                 </div>
 
                 <div class="form-group">
@@ -60,15 +61,13 @@
 
                 <div class="form-group">
                     <label for="year">Year</label>
-                    <input 
-                        type="number" 
-                        id="year" 
-                        class="form-control" 
-                        placeholder="Year"
-                        value="2025"
-                        min="2000"
-                        max="2100"
-                    >
+                    <input type="number" id="year" class="form-control" placeholder="Year" value="2025" min="2000"
+                        max="2100">
+                </div>
+
+                <div class="form-group">
+                    <label for="searchName">Search Name</label>
+                    <input type="text" id="searchName" class="form-control" placeholder="Filter by name...">
                 </div>
 
 
@@ -97,8 +96,9 @@
 
     <!-- AG Grid JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@30.2.0/dist/ag-grid-community.min.js"></script>
-    
+
     <!-- Custom JavaScript -->
     <script src="app.js?v=3"></script>
 </body>
+
 </html>
