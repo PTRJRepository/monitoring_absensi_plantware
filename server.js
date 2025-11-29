@@ -98,6 +98,7 @@ app.get('/api/employees-by-loc', async (req, res) => {
             LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
             LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
             WHERE emt.LocCode = @locCode
+            AND e.Status = 1
             ORDER BY g.GangCode, emt.EmpCode
         `;
 
@@ -180,6 +181,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
             LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
             WHERE emt.LocCode = @locCode
+                ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
             ORDER BY g.GangCode, emt.EmpCode
         `;
 
@@ -209,6 +211,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             WHERE emt.LocCode = @locCode
                 AND a.PhysMonth = @month
                 AND a.PhysYear = @year
+                ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
             ORDER BY g.GangCode, e.EmpCode, a.AttnDate
         `;
 
@@ -357,12 +360,20 @@ app.get('/api/attendance-by-loc', async (req, res) => {
                    a.[TodayIsRestDay] AS TodayIsRestDay,
                    a.[TodayIsHoliday] AS TodayIsHoliday
             FROM [db_ptrj].[dbo].[HR_EMPLOYMENT] emt
-            LEFT JOIN [db_ptrj].[dbo].[PR_EMP_ATTN] a ON emt.[EmpCode] = a.[EmpCode] 
+            JOIN [db_ptrj].[dbo].[PR_EMP_ATTN] a ON emt.[EmpCode] = a.[EmpCode] 
                 AND a.[PhysMonth] = @month 
                 AND a.[PhysYear] = @year
             LEFT JOIN [db_ptrj].[dbo].[HR_EMPLOYEE] e ON e.[EmpCode] = emt.[EmpCode]
             LEFT JOIN [db_ptrj].[dbo].[HR_GANGLN] g ON g.[GangMember] = emt.[EmpCode]
             WHERE emt.[LocCode] = @locCode
+              AND e.[Status] = 1
+              AND EXISTS (
+                  SELECT 1 FROM [db_ptrj].[dbo].[PR_EMP_ATTN] a2
+                  WHERE a2.[EmpCode] = emt.[EmpCode]
+                  AND a2.[PhysMonth] = @month
+                  AND a2.[PhysYear] = @year
+                  AND (a2.[WorkHours] > 0 OR a2.[OTHours] > 0 OR a2.[IsOnLeave] = 1)
+              )
             ORDER BY g.[GangCode], e.[EmpName], a.[AttnDate]
         `;
 
