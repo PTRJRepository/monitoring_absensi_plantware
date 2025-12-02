@@ -5,6 +5,8 @@ const API_BASE_URL = '/api';
 // Global variables
 let gridApi;
 let gridColumnApi;
+let currentGangTotals = {};
+let currentMode = 'hk';
 
 // Day names in Indonesian
 const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
@@ -63,6 +65,27 @@ function setupEventListeners() {
     }
 
     // Removed auto size button functionality
+    
+    const monitoringMode = document.getElementById('monitoringMode');
+    if (monitoringMode) {
+        monitoringMode.addEventListener('change', (e) => {
+            const modeLabel = document.getElementById('modeLabel');
+            if (e.target.checked) {
+                currentMode = 'ot';
+                modeLabel.textContent = 'Lembur';
+                modeLabel.style.color = '#f6ad55'; // Orange for OT
+            } else {
+                currentMode = 'hk';
+                modeLabel.textContent = 'HK/Absen';
+                modeLabel.style.color = '#63b3ed'; // Blue for HK
+            }
+            // Reload data with new mode if loc code exists
+            const locCode = document.getElementById('locCode').value;
+            if (locCode) {
+                loadAttendanceByLoc();
+            }
+        });
+    }
 }
 
 // Generate column definitions for the grid
@@ -127,12 +150,12 @@ async function loadAttendanceByLoc() {
         return;
     }
 
-    console.log(`🔍 Loading data for: ${locCode}, ${month}/${year}`);
+    console.log(`🔍 Loading data for: ${locCode}, ${month}/${year}, Mode: ${currentMode}`);
     showLoading(true);
 
     try {
         const response = await fetch(
-            `${API_BASE_URL}/attendance-by-loc?locCode=${encodeURIComponent(locCode)}&month=${month}&year=${year}&includeEmpName=true`
+            `${API_BASE_URL}/attendance-by-loc-enhanced?locCode=${encodeURIComponent(locCode)}&month=${month}&year=${year}&includeEmpName=true&mode=${currentMode}`
         );
 
         if (!response.ok) {
@@ -146,6 +169,9 @@ async function loadAttendanceByLoc() {
         if (!result.success || !result.data) {
             throw new Error('Invalid response format');
         }
+        
+        // Store gang totals
+        currentGangTotals = result.gangTotals || {};
 
         const daysInMonth = result.daysInMonth || new Date(year, month, 0).getDate();
         const columnDefs = generateColumnDefs(parseInt(year), parseInt(month), daysInMonth);
@@ -168,11 +194,16 @@ async function loadAttendanceByLoc() {
 
                 if (dayData && typeof dayData === 'object') {
                     // Check if meaningful data exists for the count
-                    hasData = (dayData.workHours > 0 || dayData.otHours > 0 || dayData.isOnLeave || dayData.isHoliday || dayData.isRestDay);
+                    if (currentMode === 'ot') {
+                        hasData = (dayData.otHours > 0 || (dayData.otDetails && dayData.otDetails.length > 0));
+                    } else {
+                        hasData = (dayData.workHours > 0 || dayData.otHours > 0 || dayData.isOnLeave || dayData.isHoliday || dayData.isRestDay);
+                    }
 
                     cleanRow[`day_${day}`] = {
                         workHours: dayData.workHours || 0,
                         otHours: dayData.otHours || 0,
+                        otDetails: dayData.otDetails || [],
                         isOnLeave: dayData.isOnLeave || false,
                         leaveLength: dayData.leaveLength || 0,
                         isRestDay: dayData.isRestDay || false,
@@ -183,6 +214,7 @@ async function loadAttendanceByLoc() {
                     cleanRow[`day_${day}`] = {
                         workHours: 0,
                         otHours: 0,
+                        otDetails: [],
                         isOnLeave: false,
                         leaveLength: 0,
                         isRestDay: false,
@@ -236,6 +268,23 @@ async function loadAttendanceByLoc() {
 // Custom cell renderer
 function cellRenderer(params) {
     const data = params.value;
+    
+    if (currentMode === 'ot') {
+        // OT Mode Renderer
+        if (data && (data.otHours > 0 || (data.otDetails && data.otDetails.length > 0))) {
+            let content = '';
+            if (data.otDetails && data.otDetails.length > 0) {
+                // Join with pipe or break
+                content = data.otDetails.map(h => parseFloat(h).toFixed(1).replace(/\.0$/, '')).join(' | ');
+            } else {
+                content = parseFloat(data.otHours).toFixed(1).replace(/\.0$/, '');
+            }
+            return `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #f6ad55;">${content}</div>`;
+        }
+        return '';
+    }
+
+    // HK/Absen Mode Renderer (Default)
     let title = "No Data";
     let bgColor = "#ef4444"; // Red for no data
 
@@ -309,7 +358,15 @@ function initializeGrid(columnDefs, rowData) {
         isFullWidthRow: (params) => params.rowNode.data && params.rowNode.data.isGangHeader,
         fullWidthCellRenderer: (params) => {
             const gang = params.data.gangCode || 'Unknown';
-            return `<div class="gang-header-cell"><span>GANG: ${gang}</span></div>`;
+            let html = `<div class="gang-header-cell"><span>GANG: ${gang}</span>`;
+            
+            // Add Total HK if in HK mode and data exists
+            if (currentMode === 'hk' && currentGangTotals && currentGangTotals[gang] !== undefined) {
+                html += `<span class="total-hk-badge" style="margin-left: auto; margin-right: 15px; background: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: 0.9em;">Total HK: ${currentGangTotals[gang]}</span>`;
+            }
+            
+            html += `</div>`;
+            return html;
         }
     };
 

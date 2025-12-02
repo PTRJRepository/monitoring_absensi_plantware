@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = parseInt(process.env.PORT || 3000, 10);
 
 // Middleware
 // Allow all origins for network access
@@ -124,7 +124,7 @@ app.get('/api/employees-by-loc', async (req, res) => {
 // Get attendance data for multiple employees by location code (enhanced version)
 app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
     try {
-        const { locCode, month, year, includeInactive = false } = req.query;
+        const { locCode, month, year, includeInactive = false, mode = 'hk' } = req.query;
 
         if (!locCode || !month || !year) {
             return res.status(400).json({
@@ -133,50 +133,64 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
         }
 
         const daysInMonth = new Date(year, month, 0).getDate();
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${daysInMonth}`;
 
+        // Helper for fallback data
         if (!pool) {
-            // Fallback data untuk development
-            const employees = [
-                { empCode: 'A0749', gangCode: 'G1', empName: 'Employee A' },
-                { empCode: 'B1001', gangCode: 'G2', empName: 'Employee B' },
-                { empCode: 'C2050', gangCode: 'G2', empName: 'Employee C' },
-                { empCode: 'D3011', gangCode: 'G3', empName: 'Employee D' }
+             // Fallback data untuk development
+             const employees = [
+                { EmpCode: 'A0749', GangCode: 'G1', EmpName: 'Employee A' },
+                { EmpCode: 'B1001', GangCode: 'G2', EmpName: 'Employee B' },
+                { EmpCode: 'C2050', GangCode: 'G2', EmpName: 'Employee C' },
+                { EmpCode: 'D3011', GangCode: 'G3', EmpName: 'Employee D' }
             ];
 
-            const rows = employees.map(({ empCode, gangCode, empName }) => {
-                const row = { empCode, gangCode, empName, month, year };
+            const rows = employees.map(({ EmpCode, GangCode, EmpName }) => {
+                const row = { empCode: EmpCode, gangCode: GangCode, empName: EmpName, month, year };
                 for (let day = 1; day <= daysInMonth; day++) {
                     const date = new Date(parseInt(year), parseInt(month) - 1, day);
                     const isSunday = date.getDay() === 0;
-                    row[`day_${day}`] = {
-                        workHours: isSunday ? 0 : Math.floor(Math.random() * 8) + 1,
-                        otHours: Math.random() > 0.7 ? Math.floor(Math.random() * 3) + 1 : 0,
-                        isOnLeave: Math.random() > 0.9,
-                        leaveLength: Math.random() > 0.9 ? 1 : 0,
-                        isRestDay: isSunday,
-                        isHoliday: false,
-                        date
-                    };
+                    if (mode === 'ot') {
+                        row[`day_${day}`] = {
+                            otHours: Math.random() > 0.7 ? (Math.random() * 3).toFixed(1) : 0,
+                            date
+                        };
+                    } else {
+                        row[`day_${day}`] = {
+                            workHours: isSunday ? 0 : Math.floor(Math.random() * 8) + 1,
+                            otHours: Math.random() > 0.7 ? Math.floor(Math.random() * 3) + 1 : 0,
+                            isOnLeave: Math.random() > 0.9,
+                            leaveLength: Math.random() > 0.9 ? 1 : 0,
+                            isRestDay: isSunday,
+                            isHoliday: false,
+                            date
+                        };
+                    }
                 }
                 return row;
             });
+            
+            // Mock Gang Totals for fallback
+            const gangTotals = { 'G1': 25, 'G2': 45, 'G3': 20 };
 
             return res.json({
                 success: true,
                 data: rows,
                 daysInMonth,
                 totalEmployees: rows.length,
-                location: locCode
+                location: locCode,
+                gangTotals,
+                mode
             });
         }
 
-        // Query untuk mendapatkan semua employee di lokasi tersebut
+        // 1. Get Employees
         const empQuery = `
             SELECT DISTINCT
                 emt.EmpCode,
                 e.EmpName,
-                g.GangCode,
-                g.GangName
+                g.GangCode
             FROM HR_EMPLOYMENT emt
             LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
             LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
@@ -190,69 +204,162 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             .query(empQuery);
 
         const employees = empResult.recordset;
-
-        // Query untuk mendapatkan data absensi semua employee
-        const attQuery = `
-            SELECT
-                e.EmpCode,
-                e.EmpName,
-                g.GangCode,
-                a.AttnDate,
-                a.WorkHours,
-                a.OTHours,
-                a.IsOnLeave,
-                a.LeaveLength,
-                a.TodayIsRestDay,
-                a.TodayIsHoliday
-            FROM PR_EMP_ATTN a
-            JOIN HR_EMPLOYMENT emt ON emt.EmpCode = a.EmpCode
-            LEFT JOIN HR_EMPLOYEE e ON e.EmpCode = a.EmpCode
-            LEFT JOIN HR_GANGLN g ON g.GangMember = a.EmpCode
-            WHERE emt.LocCode = @locCode
-                AND a.PhysMonth = @month
-                AND a.PhysYear = @year
-                ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
-            ORDER BY g.GangCode, e.EmpCode, a.AttnDate
-        `;
-
-        const attResult = await pool.request()
-            .input('locCode', sql.VarChar, locCode)
-            .input('month', sql.Int, parseInt(month))
-            .input('year', sql.Int, parseInt(year))
-            .query(attQuery);
-
-        // Group attendance data by employee
         const attByEmp = {};
-        attResult.recordset.forEach(record => {
-            const emp = record.EmpCode;
-            if (!attByEmp[emp]) {
-                attByEmp[emp] = {
-                    empName: record.EmpName,
-                    gangCode: record.GangCode,
-                    records: []
-                };
-            }
-            attByEmp[emp].records.push(record);
-        });
+        let gangTotals = {};
 
-        // Build final result with all employees and their attendance
-        const rows = employees.map(emp => {
+        // 2. Fetch Data based on Mode
+        if (mode === 'ot') {
+            // Overtime Mode Query
+            // Using user provided logic: FROM PR_TASKREG tr JOIN PR_TASKREGLN trl ... WHERE trl.OT = 1
+            // We fetch all relevant data in one go if possible, or per employee? 
+            // Fetching per employee is slow. We should fetch for all employees in the location.
+            // But the query provided is `WHERE trl.EmpCode = ?`.
+            // We can adapt it to `WHERE trl.EmpCode IN (SELECT ...)` or join with our employee list.
+            
+            const otQuery = `
+                SELECT 
+                    trl.EmpCode,
+                    tr.DocDate,
+                    trl.Hours
+                FROM PR_TASKREG tr 
+                JOIN PR_TASKREGLN trl ON tr.id = trl.masterId 
+                JOIN HR_EMPLOYMENT emt ON trl.EmpCode = emt.EmpCode
+                WHERE emt.LocCode = @locCode
+                AND tr.DocDate >= @startDate 
+                AND tr.DocDate <= @endDate 
+                AND trl.OT = 1
+                ORDER BY trl.EmpCode, tr.DocDate
+            `;
+            
+            const otResult = await pool.request()
+                .input('locCode', sql.VarChar, locCode)
+                .input('startDate', sql.Date, startDate)
+                .input('endDate', sql.Date, endDate)
+                .query(otQuery);
+
+            // Process OT results
+            otResult.recordset.forEach(record => {
+                const emp = record.EmpCode.trim();
+                if (!attByEmp[emp]) attByEmp[emp] = { records: [] };
+                
+                // We need to handle multiple transactions per day
+                attByEmp[emp].records.push({
+                    AttnDate: record.DocDate,
+                    OTHours: record.Hours, // Using 'Hours' column as requested/inferred
+                    IsOTOnly: true
+                });
+            });
+
+        } else {
+            // HK/Absen Mode (Standard)
+            const attQuery = `
+                SELECT
+                    e.EmpCode,
+                    e.EmpName,
+                    g.GangCode,
+                    a.AttnDate,
+                    a.WorkHours,
+                    a.OTHours,
+                    a.IsOnLeave,
+                    a.LeaveLength,
+                    a.TodayIsRestDay,
+                    a.TodayIsHoliday
+                FROM PR_EMP_ATTN a
+                JOIN HR_EMPLOYMENT emt ON emt.EmpCode = a.EmpCode
+                LEFT JOIN HR_EMPLOYEE e ON e.EmpCode = a.EmpCode
+                LEFT JOIN HR_GANGLN g ON g.GangMember = a.EmpCode
+                WHERE emt.LocCode = @locCode
+                    AND a.PhysMonth = @month
+                    AND a.PhysYear = @year
+                    ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
+                ORDER BY g.GangCode, e.EmpCode, a.AttnDate
+            `;
+
+            const attResult = await pool.request()
+                .input('locCode', sql.VarChar, locCode)
+                .input('month', sql.Int, parseInt(month))
+                .input('year', sql.Int, parseInt(year))
+                .query(attQuery);
+
+            attResult.recordset.forEach(record => {
+                const emp = record.EmpCode.trim();
+                if (!attByEmp[emp]) attByEmp[emp] = { records: [] };
+                attByEmp[emp].records.push(record);
+            });
+
+            // Calculate HK per Gang (Total HK)
+            // Query for HK based on PR_TASKREG/LN where OT=0
+            const hkQuery = `
+                SELECT 
+                    g.GangCode,
+                    COUNT(DISTINCT tr.DocDate) as MemberHK
+                FROM PR_TASKREG tr 
+                JOIN PR_TASKREGLN trl ON tr.id = trl.masterId 
+                JOIN HR_EMPLOYMENT emt ON trl.EmpCode = emt.EmpCode
+                LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
+                WHERE emt.LocCode = @locCode
+                AND tr.DocDate >= @startDate 
+                AND tr.DocDate <= @endDate 
+                AND trl.OT = 0
+                GROUP BY g.GangCode, trl.EmpCode
+            `;
+            // Note: The above groups by Gang and EmpCode to get HK per member.
+            // We need to sum these up per Gang.
+            
+            const hkResult = await pool.request()
+                .input('locCode', sql.VarChar, locCode)
+                .input('startDate', sql.Date, startDate)
+                .input('endDate', sql.Date, endDate)
+                .query(hkQuery);
+                
+            // Sum up MemberHK per GangCode
+            hkResult.recordset.forEach(row => {
+                const gang = row.GangCode || 'INF';
+                if (!gangTotals[gang]) gangTotals[gang] = 0;
+                gangTotals[gang] += row.MemberHK;
+            });
+        }
+
+        // 3. Build Response
+        let rows = employees.map(emp => {
             const dateMap = {};
-            const empAttData = attByEmp[emp.EmpCode];
+            const empAttData = attByEmp[emp.EmpCode.trim()];
+            
+            // Helper to track if employee has ANY OT in this month
+            let totalOTForEmp = 0;
 
             if (empAttData && empAttData.records) {
                 empAttData.records.forEach(record => {
                     const d = new Date(record.AttnDate);
                     const day = d.getDate();
-                    dateMap[day] = {
-                        workHours: record.WorkHours || 0,
-                        otHours: record.OTHours || 0,
-                        isOnLeave: record.IsOnLeave,
-                        leaveLength: record.LeaveLength || 0,
-                        isRestDay: record.TodayIsRestDay,
-                        isHoliday: record.TodayIsHoliday,
-                        date: record.AttnDate
-                    };
+                    
+                    if (!dateMap[day]) {
+                         dateMap[day] = {
+                            workHours: 0,
+                            otHours: 0,
+                            otDetails: [], // To store multiple OT transactions
+                            isOnLeave: false,
+                            leaveLength: 0,
+                            isRestDay: record.TodayIsRestDay || false,
+                            isHoliday: record.TodayIsHoliday || false,
+                            date: record.AttnDate
+                        };
+                    }
+
+                    if (mode === 'ot') {
+                        if (record.OTHours) {
+                            dateMap[day].otDetails.push(record.OTHours);
+                            // Also sum it up for simple display if needed, but we use otDetails for display
+                            const otVal = parseFloat(record.OTHours);
+                            dateMap[day].otHours += otVal;
+                            totalOTForEmp += otVal;
+                        }
+                    } else {
+                        dateMap[day].workHours = record.WorkHours || 0;
+                        dateMap[day].otHours = record.OTHours || 0;
+                        dateMap[day].isOnLeave = record.IsOnLeave;
+                        dateMap[day].leaveLength = record.LeaveLength || 0;
+                    }
                 });
             }
 
@@ -261,7 +368,8 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 gangCode: emp.GangCode,
                 empName: emp.EmpName,
                 month,
-                year
+                year,
+                totalOT: totalOTForEmp // Store for filtering
             };
 
             for (let day = 1; day <= daysInMonth; day++) {
@@ -276,6 +384,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                     row[`day_${day}`] = {
                         workHours: 0,
                         otHours: 0,
+                        otDetails: [],
                         isOnLeave: false,
                         leaveLength: 0,
                         isRestDay: isSunday,
@@ -287,12 +396,19 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             return row;
         });
 
+        // Filter for OT mode: Only show employees with > 0 OT
+        if (mode === 'ot') {
+            rows = rows.filter(r => r.totalOT > 0);
+        }
+
         res.json({
             success: true,
             data: rows,
             daysInMonth,
             totalEmployees: rows.length,
-            location: locCode
+            location: locCode,
+            gangTotals, // Will be empty/undefined for OT mode
+            mode
         });
 
     } catch (err) {
