@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = parseInt(process.env.PORT || 5177, 10);
+const PORT = parseInt(process.env.PORT || 5176, 10);
 
 // Middleware
 // Allow all origins for network access
