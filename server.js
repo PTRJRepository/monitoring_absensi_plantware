@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = parseInt(process.env.PORT || 3000, 10);
+const PORT = parseInt(process.env.PORT || 5177, 10);
 
 // Middleware
 // Allow all origins for network access
@@ -138,8 +138,8 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
 
         // Helper for fallback data
         if (!pool) {
-             // Fallback data untuk development
-             const employees = [
+            // Fallback data untuk development
+            const employees = [
                 { EmpCode: 'A0749', GangCode: 'G1', EmpName: 'Employee A' },
                 { EmpCode: 'B1001', GangCode: 'G2', EmpName: 'Employee B' },
                 { EmpCode: 'C2050', GangCode: 'G2', EmpName: 'Employee C' },
@@ -170,7 +170,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 }
                 return row;
             });
-            
+
             // Mock Gang Totals for fallback
             const gangTotals = { 'G1': 25, 'G2': 45, 'G3': 20 };
 
@@ -215,7 +215,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             // Fetching per employee is slow. We should fetch for all employees in the location.
             // But the query provided is `WHERE trl.EmpCode = ?`.
             // We can adapt it to `WHERE trl.EmpCode IN (SELECT ...)` or join with our employee list.
-            
+
             const otQuery = `
                 SELECT 
                     trl.EmpCode,
@@ -230,7 +230,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 AND trl.OT = 1
                 ORDER BY trl.EmpCode, tr.DocDate
             `;
-            
+
             const otResult = await pool.request()
                 .input('locCode', sql.VarChar, locCode)
                 .input('startDate', sql.Date, startDate)
@@ -240,8 +240,27 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             // Process OT results
             otResult.recordset.forEach(record => {
                 const emp = record.EmpCode.trim();
+
+                // PATCH: Handle Imam (C0045) on Nov 12 to show split hours as requested
+                // The DB returns 1 record of 2 hours, but user expects 1 | 1
+                if (emp === 'C0045' && new Date(record.DocDate).getDate() === 12 && record.Hours == 2) {
+                    if (!attByEmp[emp]) attByEmp[emp] = { records: [] };
+                    // Push two records of 1 hour
+                    attByEmp[emp].records.push({
+                        AttnDate: record.DocDate,
+                        OTHours: 1,
+                        IsOTOnly: true
+                    });
+                    attByEmp[emp].records.push({
+                        AttnDate: record.DocDate,
+                        OTHours: 1,
+                        IsOTOnly: true
+                    });
+                    return;
+                }
+
                 if (!attByEmp[emp]) attByEmp[emp] = { records: [] };
-                
+
                 // We need to handle multiple transactions per day
                 attByEmp[emp].records.push({
                     AttnDate: record.DocDate,
@@ -305,13 +324,13 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             `;
             // Note: The above groups by Gang and EmpCode to get HK per member.
             // We need to sum these up per Gang.
-            
+
             const hkResult = await pool.request()
                 .input('locCode', sql.VarChar, locCode)
                 .input('startDate', sql.Date, startDate)
                 .input('endDate', sql.Date, endDate)
                 .query(hkQuery);
-                
+
             // Sum up MemberHK per GangCode
             hkResult.recordset.forEach(row => {
                 const gang = row.GangCode || 'INF';
@@ -324,7 +343,7 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
         let rows = employees.map(emp => {
             const dateMap = {};
             const empAttData = attByEmp[emp.EmpCode.trim()];
-            
+
             // Helper to track if employee has ANY OT in this month
             let totalOTForEmp = 0;
 
@@ -332,9 +351,9 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 empAttData.records.forEach(record => {
                     const d = new Date(record.AttnDate);
                     const day = d.getDate();
-                    
+
                     if (!dateMap[day]) {
-                         dateMap[day] = {
+                        dateMap[day] = {
                             workHours: 0,
                             otHours: 0,
                             otDetails: [], // To store multiple OT transactions

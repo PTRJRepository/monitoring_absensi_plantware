@@ -50,9 +50,6 @@ SELECT TOP (1000) [ID]
   FROM [db_ptrj].[dbo].[PR_TASKREGLN]
   
 
-
-
-
 lembur didapatkan dari tabel ini FROM PR_TASKREG tr
 JOIN PR_TASKREGLN trl ON tr.id = trl.masterId
 WHERE trl.EmpCode = ?
@@ -60,6 +57,11 @@ WHERE trl.EmpCode = ?
   AND tr.DocDate < ?
   AND trl.OT = 1
 
-  atur tanggal sesuai bulan yang dipilih, 
+  atur tanggal sesuai bulan yang dipilih,  jika pada satu hari absen (berdasrkkan docdate), terdapat lebih dari satu transaksi OT, maka di matriks nya tampilkan MASING-masing Hours nya, 
+  
+
   
   tampilkan angka,  
+
+
+  jadi user bisa pilih mau tampilkan absen (HK), atau uraian Overtime / lemburnya

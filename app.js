@@ -273,13 +273,23 @@ function cellRenderer(params) {
         // OT Mode Renderer
         if (data && (data.otHours > 0 || (data.otDetails && data.otDetails.length > 0))) {
             let content = '';
+            let isMultiple = false;
+
             if (data.otDetails && data.otDetails.length > 0) {
-                // Join with pipe or break
+                // Join with pipe
                 content = data.otDetails.map(h => parseFloat(h).toFixed(1).replace(/\.0$/, '')).join(' | ');
+                if (data.otDetails.length > 1) {
+                    isMultiple = true;
+                }
             } else {
                 content = parseFloat(data.otHours).toFixed(1).replace(/\.0$/, '');
             }
-            return `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #f6ad55;">${content}</div>`;
+
+            // Different style for multiple OT records
+            const bgStyle = isMultiple ? 'background-color: #744210; border-radius: 4px;' : ''; // Dark orange background for multiple
+            const colorStyle = isMultiple ? 'color: #fbd38d;' : 'color: #f6ad55;';
+
+            return `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: bold; ${colorStyle} ${bgStyle}">${content}</div>`;
         }
         return '';
     }
