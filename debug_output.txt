@@ -1,0 +1,148 @@
+﻿Connecting to database...
+Connected!
+
+=== TEST 1: All distinct periods in PR_EMP_ATTN with P1A employees ===
+Periods found: [ { year: 2025, month: 12, recordCount: 224 } ]
+
+=== TEST 2: Sample AttnDate values for P1A ===
+Sample records: [
+  {
+    EmpCode: 'A0023',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0150',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0231',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0240',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0241',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0242',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0243',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0244',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0245',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  },
+  {
+    EmpCode: 'A0246',
+    AttnDate: 2025-12-09T00:00:00.000Z,
+    WorkHours: 7,
+    PhysMonth: '12',
+    PhysYear: '2025',
+    LocCode: 'P1A'
+  }
+]
+
+=== TEST 3: Check JOIN issue ===
+{
+  description: 'Total in PR_EMP_ATTN for locCode P1A (after JOIN)',
+  count: 224
+}
+{ description: 'Total in PR_EMP_ATTN (all)', count: 350 }
+
+=== TEST 4: All distinct LocCode values ===
+LocCodes: [
+  { LocCode: '', EmpCount: 62 },
+  { LocCode: 'AB1', EmpCount: 584 },
+  { LocCode: 'AB2', EmpCount: 524 },
+  { LocCode: 'ARA', EmpCount: 479 },
+  { LocCode: 'ARC', EmpCount: 820 },
+  { LocCode: 'DME', EmpCount: 585 },
+  { LocCode: 'IJL', EmpCount: 106 },
+  { LocCode: 'P1A', EmpCount: 915 },
+  { LocCode: 'P1B', EmpCount: 677 },
+  { LocCode: 'P2A', EmpCount: 707 },
+  { LocCode: 'P2B', EmpCount: 373 }
+]
+
+=== TEST 5: Exact available-months query ===
+Available months (API query): [ { year: 2025, month: 12 } ]
+
+=== TEST 6: Check if RTRIM is needed for JOIN ===
+EmpCode comparison: [
+  {
+    AttnEmpCode: '[A0023]',
+    EmtEmpCode: '[A0023               ]',
+    AttnLen: 5,
+    EmtLen: 5
+  },
+  {
+    AttnEmpCode: '[A0023]',
+    EmtEmpCode: '[A0023               ]',
+    AttnLen: 5,
+    EmtLen: 5
+  },
+  {
+    AttnEmpCode: '[A0023]',
+    EmtEmpCode: '[A0023               ]',
+    AttnLen: 5,
+    EmtLen: 5
+  },
+  {
+    AttnEmpCode: '[A0023]',
+    EmtEmpCode: '[A0023               ]',
+    AttnLen: 5,
+    EmtLen: 5
+  },
+  {
+    AttnEmpCode: '[A0023]',
+    EmtEmpCode: '[A0023               ]',
+    AttnLen: 5,
+    EmtLen: 5
+  }
+]

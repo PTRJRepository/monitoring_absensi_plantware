@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node test_db_connection:*)",
+      "Bash(node:*)",
+      "Bash(start http://localhost:5176/)",
+      "Bash(curl:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(set:*)"
+    ]
+  }
+}

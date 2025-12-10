@@ -42,27 +42,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="month">Month</label>
-                    <select id="month" class="form-control">
-                        <option value="1">January</option>
-                        <option value="2">February</option>
-                        <option value="3">March</option>
-                        <option value="4">April</option>
-                        <option value="5">May</option>
-                        <option value="6">June</option>
-                        <option value="7">July</option>
-                        <option value="8">August</option>
-                        <option value="9">September</option>
-                        <option value="10">October</option>
-                        <option value="11" selected>November</option>
-                        <option value="12">December</option>
+                    <label for="periode">Periode</label>
+                    <select id="periode" class="form-control" disabled>
+                        <option value="">-- Masukkan Loc Code --</option>
                     </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="year">Year</label>
-                    <input type="number" id="year" class="form-control" placeholder="Year" value="2025" min="2000"
-                        max="2100">
                 </div>
 
                 <div class="form-group">
@@ -93,7 +76,7 @@
         <div id="gridContainer" class="grid-container">
             <div id="emptyState" class="empty-state">
                 <div class="empty-icon">👈</div>
-                <div class="empty-text">Please enter a Loc Code and Year/Month to begin monitoring</div>
+                <div class="empty-text">Masukkan Loc Code untuk memuat daftar periode yang tersedia</div>
             </div>
             <div class="loading" id="loadingState" style="display: none;">
                 <div class="spinner"></div>

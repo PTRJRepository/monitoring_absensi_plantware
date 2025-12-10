@@ -1,0 +1,36 @@
+﻿=== EmpCodes in PR_EMP_ATTN for Dec 2025 (sample) ===
+Sample EmpCodes from PR_EMP_ATTN: [
+  { EmpCodeFromAttn: 'A0023' },
+  { EmpCodeFromAttn: 'A0150' },
+  { EmpCodeFromAttn: 'A0231' },
+  { EmpCodeFromAttn: 'A0240' },
+  { EmpCodeFromAttn: 'A0241' },
+  { EmpCodeFromAttn: 'A0242' },
+  { EmpCodeFromAttn: 'A0243' },
+  { EmpCodeFromAttn: 'A0244' },
+  { EmpCodeFromAttn: 'A0245' },
+  { EmpCodeFromAttn: 'A0246' }
+]
+
+=== What LocCode do these employees belong to? ===
+EmpCode to LocCode mapping: [
+  { EmpCode: 'A0023', LocCode: 'P1A' },
+  { EmpCode: 'A0150', LocCode: 'P1A' },
+  { EmpCode: 'A0231', LocCode: 'P1A' },
+  { EmpCode: 'A0240', LocCode: 'P1A' },
+  { EmpCode: 'A0241', LocCode: 'P1A' },
+  { EmpCode: 'A0242', LocCode: 'P1A' },
+  { EmpCode: 'A0243', LocCode: 'P1A' },
+  { EmpCode: 'A0244', LocCode: 'P1A' },
+  { EmpCode: 'A0245', LocCode: 'P1A' },
+  { EmpCode: 'A0246', LocCode: 'P1A' }
+]
+
+=== Check A0023 (first in PR_EMP_ATTN) ===
+A0023 location: [ { EmpCode: 'A0023', LocCode: 'P1A' } ]
+
+=== LocCodes with attendance in Dec 2025 ===
+LocCodes with attendance: [
+  { LocCode: 'P1A', EmpCount: 28, AttendanceRecords: 224 },
+  { LocCode: 'P1B', EmpCount: 16, AttendanceRecords: 126 }
+]

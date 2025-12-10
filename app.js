@@ -11,14 +11,15 @@ let currentMode = 'hk';
 // Day names in Indonesian
 const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
+// Month names
+const monthNames = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
-
-    // Set current month and year as default
-    const now = new Date();
-    document.getElementById('month').value = now.getMonth() + 1;
-    document.getElementById('year').value = now.getFullYear();
 
     // Auto-size columns on window resize
     window.addEventListener('resize', () => {
@@ -44,14 +45,40 @@ function setupEventListeners() {
         loadByLocBtn.addEventListener('click', loadAttendanceByLoc);
     }
 
-    document.getElementById('year').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') loadAttendanceByLoc();
-    });
-
+    // Listen for loc code changes to load available periods
     const locCodeInput = document.getElementById('locCode');
     if (locCodeInput) {
+        // Load periods when user finishes typing (with debounce)
+        let debounceTimer;
+        locCodeInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const locCode = e.target.value.trim();
+                if (locCode.length >= 2) {
+                    loadAvailablePeriods(locCode);
+                } else {
+                    resetPeriodeDropdown();
+                }
+            }, 500);
+        });
+
         locCodeInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loadAttendanceByLoc();
+            if (e.key === 'Enter') {
+                const locCode = e.target.value.trim();
+                if (locCode.length >= 2) {
+                    loadAvailablePeriods(locCode);
+                }
+            }
+        });
+    }
+
+    // Listen for periode changes to auto-load data
+    const periodeSelect = document.getElementById('periode');
+    if (periodeSelect) {
+        periodeSelect.addEventListener('change', (e) => {
+            if (e.target.value) {
+                loadAttendanceByLoc();
+            }
         });
     }
 
@@ -64,8 +91,6 @@ function setupEventListeners() {
         });
     }
 
-    // Removed auto size button functionality
-    
     const monitoringMode = document.getElementById('monitoringMode');
     if (monitoringMode) {
         monitoringMode.addEventListener('change', (e) => {
@@ -79,12 +104,75 @@ function setupEventListeners() {
                 modeLabel.textContent = 'HK/Absen';
                 modeLabel.style.color = '#63b3ed'; // Blue for HK
             }
-            // Reload data with new mode if loc code exists
-            const locCode = document.getElementById('locCode').value;
-            if (locCode) {
+            // Reload data with new mode if periode is selected
+            const periodeSelect = document.getElementById('periode');
+            if (periodeSelect && periodeSelect.value) {
                 loadAttendanceByLoc();
             }
         });
+    }
+}
+
+// Reset periode dropdown to initial state
+function resetPeriodeDropdown() {
+    const periodeSelect = document.getElementById('periode');
+    periodeSelect.innerHTML = '<option value="">-- Masukkan Loc Code --</option>';
+    periodeSelect.disabled = true;
+}
+
+// Load available periods from database
+async function loadAvailablePeriods(locCode) {
+    const periodeSelect = document.getElementById('periode');
+
+    try {
+        periodeSelect.innerHTML = '<option value="">Memuat periode...</option>';
+        periodeSelect.disabled = true;
+
+        const response = await fetch(`${API_BASE_URL}/available-months?locCode=${encodeURIComponent(locCode)}`);
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch available months');
+        }
+
+        const result = await response.json();
+        console.log('📅 Available periods:', result);
+
+        if (!result.success || !result.data || result.data.length === 0) {
+            periodeSelect.innerHTML = '<option value="">Tidak ada data absensi</option>';
+            periodeSelect.disabled = true;
+            return;
+        }
+
+        // Populate dropdown with available periods
+        periodeSelect.innerHTML = '<option value="">-- Pilih Periode --</option>';
+        result.data.forEach(period => {
+            const monthName = monthNames[period.month - 1];
+            const option = document.createElement('option');
+            option.value = `${period.year}-${period.month}`;
+            option.textContent = `${monthName} ${period.year}`;
+            periodeSelect.appendChild(option);
+        });
+
+        periodeSelect.disabled = false;
+
+        // Auto-select the first (most recent) period
+        if (result.data.length > 0) {
+            periodeSelect.selectedIndex = 1; // Select first actual period
+            periodeSelect.disabled = true; // Disable selection after loading
+            // Update label to show it's based on database data
+            const label = document.querySelector('label[for="periode"]');
+            if (label) {
+                label.textContent = 'Periode (Berdasarkan Data)';
+            }
+            // Auto-load data
+            loadAttendanceByLoc();
+        }
+
+    } catch (error) {
+        console.error('❌ Error loading available periods:', error);
+        periodeSelect.innerHTML = '<option value="">Error memuat periode</option>';
+        periodeSelect.disabled = true;
     }
 }
 
@@ -137,18 +225,21 @@ function generateColumnDefs(year, month, daysInMonth) {
 
 async function loadAttendanceByLoc() {
     const locCode = document.getElementById('locCode').value.trim();
-    const month = document.getElementById('month').value;
-    const year = document.getElementById('year').value;
+    const periodeSelect = document.getElementById('periode');
+    const selectedPeriode = periodeSelect.value;
 
     if (!locCode) {
         alert('Please enter a loc code');
         return;
     }
 
-    if (!month || !year) {
-        alert('Please select month and year');
+    if (!selectedPeriode) {
+        alert('Please select a periode');
         return;
     }
+
+    // Parse periode (format: YYYY-MM)
+    const [year, month] = selectedPeriode.split('-');
 
     console.log(`🔍 Loading data for: ${locCode}, ${month}/${year}, Mode: ${currentMode}`);
     showLoading(true);
@@ -169,7 +260,7 @@ async function loadAttendanceByLoc() {
         if (!result.success || !result.data) {
             throw new Error('Invalid response format');
         }
-        
+
         // Store gang totals
         currentGangTotals = result.gangTotals || {};
 
@@ -268,7 +359,7 @@ async function loadAttendanceByLoc() {
 // Custom cell renderer
 function cellRenderer(params) {
     const data = params.value;
-    
+
     if (currentMode === 'ot') {
         // OT Mode Renderer
         if (data && (data.otHours > 0 || (data.otDetails && data.otDetails.length > 0))) {
@@ -369,12 +460,12 @@ function initializeGrid(columnDefs, rowData) {
         fullWidthCellRenderer: (params) => {
             const gang = params.data.gangCode || 'Unknown';
             let html = `<div class="gang-header-cell"><span>GANG: ${gang}</span>`;
-            
+
             // Add Total HK if in HK mode and data exists
             if (currentMode === 'hk' && currentGangTotals && currentGangTotals[gang] !== undefined) {
                 html += `<span class="total-hk-badge" style="margin-left: auto; margin-right: 15px; background: #2b6cb0; padding: 2px 8px; border-radius: 4px; font-size: 0.9em;">Total HK: ${currentGangTotals[gang]}</span>`;
             }
-            
+
             html += `</div>`;
             return html;
         }
@@ -405,9 +496,5 @@ function showLoading(isLoading) {
 
 // Get month name
 function getMonthName(month) {
-    const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
     return monthNames[month - 1];
 }

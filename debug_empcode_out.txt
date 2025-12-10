@@ -1,0 +1,24 @@
+﻿=== empQuery EmpCode format (HR_EMPLOYMENT) ===
+[
+  { EmpCode: 'A0001', Bracketed: '[A0001]', Len: 5 },
+  { EmpCode: 'A0002', Bracketed: '[A0002]', Len: 5 },
+  { EmpCode: 'A0003', Bracketed: '[A0003]', Len: 5 }
+]
+
+=== attQuery EmpCode format (PR_EMP_ATTN) ===
+[
+  { EmpCode: 'A0023', Bracketed: '[A0023]', Len: 5 },
+  { EmpCode: 'A0023', Bracketed: '[A0023]', Len: 5 },
+  { EmpCode: 'A0023', Bracketed: '[A0023]', Len: 5 }
+]
+
+=== Check A0234 specifically ===
+HR_EMPLOYMENT A0234: [
+  {
+    Original: '[A0234               ]',
+    Trimmed: '[A0234]',
+    OrigLen: 5,
+    TrimLen: 5
+  }
+]
+PR_EMP_ATTN A0234: []

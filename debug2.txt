@@ -1,0 +1,50 @@
+﻿node : [eval]:9
+At line:1 char:1
++ node -e "
++ ~~~~~~~~~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ([eval]:9:S   
+ tring) [], Remote    
+Exception
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+    const r1 = await p
+ool.request().input('l
+ocCode', sql.VarChar, 
+'P1A').query(\
+                      
+                      
+                      
+             ^
+
+SyntaxError: Invalid 
+or unexpected token
+    at 
+makeContextifyScript (
+node:internal/vm:185:1
+4)
+    at compileScript (
+node:internal/process/
+execution:386:10)
+    at node:internal/p
+rocess/execution:450:2
+5
+    at 
+[eval]-wrapper:6:24
+    at 
+runScriptInContext (no
+de:internal/process/ex
+ecution:447:60)
+    at evalFunction (n
+ode:internal/process/e
+xecution:87:30)
+    at evalScript (nod
+e:internal/process/exe
+cution:99:3)
+    at node:internal/m
+ain/eval_string:74:3
+
+Node.js v22.14.0

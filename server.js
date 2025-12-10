@@ -185,25 +185,29 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             });
         }
 
-        // 1. Get Employees
+        // 1. Get Employees (only those with attendance records for this month/year)
         const empQuery = `
             SELECT DISTINCT
-                emt.EmpCode,
-                e.EmpName,
-                g.GangCode
-            FROM HR_EMPLOYMENT emt
-            LEFT JOIN HR_EMPLOYEE e ON emt.EmpCode = e.EmpCode
-            LEFT JOIN HR_GANGLN g ON emt.EmpCode = g.GangMember
-            WHERE emt.LocCode = @locCode
-                ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
-            ORDER BY g.GangCode, emt.EmpCode
+                RTRIM(a.EmpCode) AS EmpCode,
+                RTRIM(e.EmpName) AS EmpName,
+                ISNULL(RTRIM(g.GangCode), 'INF') AS GangCode
+            FROM PR_EMP_ATTN a
+            LEFT JOIN HR_EMPLOYEE e ON RTRIM(a.EmpCode) = RTRIM(e.EmpCode)
+            LEFT JOIN HR_GANGLN g ON RTRIM(a.EmpCode) = RTRIM(g.GangMember)
+            WHERE UPPER(a.LocCode) = UPPER(@locCode)
+            AND YEAR(a.AttnDate) = @year
+            AND MONTH(a.AttnDate) = @month
+            ORDER BY ISNULL(RTRIM(g.GangCode), 'INF'), RTRIM(a.EmpCode)
         `;
 
         const empResult = await pool.request()
             .input('locCode', sql.VarChar, locCode)
+            .input('month', sql.Int, parseInt(month))
+            .input('year', sql.Int, parseInt(year))
             .query(empQuery);
 
         const employees = empResult.recordset;
+        console.log(`Found ${employees.length} employees for locCode: ${locCode}`);
         const attByEmp = {};
         let gangTotals = {};
 
@@ -270,12 +274,12 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
             });
 
         } else {
-            // HK/Absen Mode (Standard)
+            // HK/Absen Mode (Standard) - using AttnDate instead of PhysMonth/PhysYear
             const attQuery = `
                 SELECT
-                    e.EmpCode,
-                    e.EmpName,
-                    g.GangCode,
+                    RTRIM(a.EmpCode) AS EmpCode,
+                    RTRIM(e.EmpName) AS EmpName,
+                    RTRIM(g.GangCode) AS GangCode,
                     a.AttnDate,
                     a.WorkHours,
                     a.OTHours,
@@ -284,14 +288,12 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                     a.TodayIsRestDay,
                     a.TodayIsHoliday
                 FROM PR_EMP_ATTN a
-                JOIN HR_EMPLOYMENT emt ON emt.EmpCode = a.EmpCode
-                LEFT JOIN HR_EMPLOYEE e ON e.EmpCode = a.EmpCode
-                LEFT JOIN HR_GANGLN g ON g.GangMember = a.EmpCode
-                WHERE emt.LocCode = @locCode
-                    AND a.PhysMonth = @month
-                    AND a.PhysYear = @year
-                    ${includeInactive === 'true' ? '' : 'AND e.Status = 1'}
-                ORDER BY g.GangCode, e.EmpCode, a.AttnDate
+                LEFT JOIN HR_EMPLOYEE e ON RTRIM(e.EmpCode) = RTRIM(a.EmpCode)
+                LEFT JOIN HR_GANGLN g ON RTRIM(g.GangMember) = RTRIM(a.EmpCode)
+                WHERE UPPER(a.LocCode) = UPPER(@locCode)
+                    AND YEAR(a.AttnDate) = @year
+                    AND MONTH(a.AttnDate) = @month
+                ORDER BY g.GangCode, a.EmpCode, a.AttnDate
             `;
 
             const attResult = await pool.request()
@@ -300,8 +302,9 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                 .input('year', sql.Int, parseInt(year))
                 .query(attQuery);
 
+            console.log(`Found ${attResult.recordset.length} attendance records for ${locCode}, ${month}/${year}`);
             attResult.recordset.forEach(record => {
-                const emp = record.EmpCode.trim();
+                const emp = record.EmpCode;
                 if (!attByEmp[emp]) attByEmp[emp] = { records: [] };
                 attByEmp[emp].records.push(record);
             });
@@ -342,10 +345,15 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
         // 3. Build Response
         let rows = employees.map(emp => {
             const dateMap = {};
-            const empAttData = attByEmp[emp.EmpCode.trim()];
+            const empAttData = attByEmp[emp.EmpCode];
 
             // Helper to track if employee has ANY OT in this month
             let totalOTForEmp = 0;
+
+            // Debug: Log for first few employees
+            if (emp.EmpCode.startsWith('A023') || emp.EmpCode.startsWith('A024')) {
+                console.log(`Debug - Processing ${emp.EmpCode}, has data: ${!!empAttData}, records: ${empAttData ? empAttData.records.length : 0}`);
+            }
 
             if (empAttData && empAttData.records) {
                 empAttData.records.forEach(record => {
@@ -378,6 +386,11 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
                         dateMap[day].otHours = record.OTHours || 0;
                         dateMap[day].isOnLeave = record.IsOnLeave;
                         dateMap[day].leaveLength = record.LeaveLength || 0;
+
+                        // Debug for day 9
+                        if ((emp.EmpCode.startsWith('A023') || emp.EmpCode.startsWith('A024')) && day === 9) {
+                            console.log(`Debug - Day 9 for ${emp.EmpCode}: WorkHours=${record.WorkHours}, Date=${record.AttnDate}`);
+                        }
                     }
                 });
             }
@@ -397,6 +410,10 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
 
                 if (dayData) {
                     row[`day_${day}`] = dayData;
+                    // Debug: Check if day 9 has correct data
+                    if ((emp.EmpCode.startsWith('A023') || emp.EmpCode.startsWith('A024')) && day === 9) {
+                        console.log(`Final check - Day 9 for ${emp.EmpCode}: workHours=${dayData.workHours}`);
+                    }
                 } else {
                     const date = new Date(dateStr);
                     const isSunday = date.getDay() === 0;
@@ -432,6 +449,55 @@ app.get('/api/attendance-by-loc-enhanced', async (req, res) => {
 
     } catch (err) {
         console.error('Error fetching enhanced attendance by loc:', err);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: err.message
+        });
+    }
+});
+
+// Get available months from AttnDate for a location
+app.get('/api/available-months', async (req, res) => {
+    try {
+        const { locCode } = req.query;
+
+        if (!locCode) {
+            return res.status(400).json({
+                error: 'Missing required parameter: locCode'
+            });
+        }
+
+        if (!pool) {
+            // Fallback data untuk development
+            const fallbackMonths = [
+                { year: 2025, month: 12 },
+                { year: 2025, month: 11 },
+                { year: 2025, month: 10 }
+            ];
+            return res.json({ success: true, data: fallbackMonths });
+        }
+
+        const query = `
+            SELECT DISTINCT
+                YEAR(AttnDate) AS year,
+                MONTH(AttnDate) AS month
+            FROM PR_EMP_ATTN
+            WHERE UPPER(LocCode) = UPPER(@locCode)
+            ORDER BY year DESC, month DESC
+        `;
+
+        const result = await pool.request()
+            .input('locCode', sql.VarChar, locCode)
+            .query(query);
+
+        res.json({
+            success: true,
+            data: result.recordset,
+            count: result.recordset.length
+        });
+
+    } catch (err) {
+        console.error('Error fetching available months:', err);
         res.status(500).json({
             error: 'Internal server error',
             message: err.message
